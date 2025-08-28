@@ -36,25 +36,6 @@ services:
     networks:
       - bitcoin-net
 
-  bitcoin-cli-regtest:
-    image: kylemanna/bitcoind:latest
-    container_name: bitcoin-cli-regtest
-    depends_on:
-      - bitcoin-regtest
-    volumes:
-      - ./data-regtest:/bitcoin/.bitcoin
-    environment:
-      - BITCOIN_NETWORK=regtest
-    command: >
-      bitcoin-cli
-      -regtest
-      -rpcuser=testuser
-      -rpcpassword=testpass123
-      -rpcconnect=bitcoin-regtest
-      -rpcport=18443
-    networks:
-      - bitcoin-net
-
 networks:
   bitcoin-net:
     driver: bridge
