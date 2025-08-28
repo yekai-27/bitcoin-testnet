@@ -1,0 +1,60 @@
+services:
+  bitcoin-regtest:
+    image: kylemanna/bitcoind:latest
+    container_name: bitcoin-regtest
+    restart: unless-stopped
+    ports:
+      - "18443:18443"  # RPC端口
+      - "18444:18444"  # P2P端口
+      - "28432:28432"  # ZMQ rawblock (避免与testnet冲突)
+      - "28433:28433"  # ZMQ rawtx
+      - "28434:28434"  # ZMQ hashblock
+    volumes:
+      - ./data-regtest:/bitcoin/.bitcoin
+      - ./logs:/bitcoin/logs
+    environment:
+      - BITCOIN_NETWORK=regtest
+      - BITCOIN_RPC_USER=testuser
+      - BITCOIN_RPC_PASSWORD=testpass123
+      - BITCOIN_RPC_ALLOW_IP=0.0.0.0/0
+    command: >
+      bitcoind
+      -regtest
+      -printtoconsole
+      -logtimestamps
+      -txindex=1
+      -server=1
+      -rpcuser=testuser
+      -rpcpassword=testpass123
+      -rpcallowip=0.0.0.0/0
+      -rpcbind=0.0.0.0
+      -rpcport=18443
+      -port=18444
+      -zmqpubrawblock=tcp://0.0.0.0:28432
+      -zmqpubrawtx=tcp://0.0.0.0:28433
+      -zmqpubhashblock=tcp://0.0.0.0:28434
+    networks:
+      - bitcoin-net
+
+  bitcoin-cli-regtest:
+    image: kylemanna/bitcoind:latest
+    container_name: bitcoin-cli-regtest
+    depends_on:
+      - bitcoin-regtest
+    volumes:
+      - ./data-regtest:/bitcoin/.bitcoin
+    environment:
+      - BITCOIN_NETWORK=regtest
+    command: >
+      bitcoin-cli
+      -regtest
+      -rpcuser=testuser
+      -rpcpassword=testpass123
+      -rpcconnect=bitcoin-regtest
+      -rpcport=18443
+    networks:
+      - bitcoin-net
+
+networks:
+  bitcoin-net:
+    driver: bridge

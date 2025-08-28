@@ -1,0 +1,57 @@
+services:
+  bitcoin-testnet:
+    image: kylemanna/bitcoind:latest
+    container_name: bitcoin-testnet
+    restart: unless-stopped
+    ports:
+      - "18332:18332"  # RPC端口
+      - "18333:18333"  # P2P端口
+      - "28332:28332"  # ZMQ rawblock
+      - "28333:28333"  # ZMQ rawtx
+      - "28334:28334"  # ZMQ hashblock
+    volumes:
+      - ./data:/bitcoin/.bitcoin
+      - ./logs:/bitcoin/logs
+    environment:
+      - BITCOIN_NETWORK=testnet
+      - BITCOIN_RPC_USER=testuser
+      - BITCOIN_RPC_PASSWORD=testpass123
+      - BITCOIN_RPC_ALLOW_IP=0.0.0.0/0
+    command: >
+      bitcoind
+      -testnet
+      -printtoconsole
+      -logtimestamps
+      -txindex=1
+      -server=1
+      -rpcuser=testuser
+      -rpcpassword=testpass123
+      -rpcallowip=0.0.0.0/0
+      -rpcbind=0.0.0.0
+      -zmqpubrawblock=tcp://0.0.0.0:28332
+      -zmqpubrawtx=tcp://0.0.0.0:28333
+      -zmqpubhashblock=tcp://0.0.0.0:28334
+    networks:
+      - bitcoin-net
+
+  bitcoin-cli:
+    image: kylemanna/bitcoind:latest
+    container_name: bitcoin-cli
+    depends_on:
+      - bitcoin-testnet
+    volumes:
+      - ./data:/bitcoin/.bitcoin
+    environment:
+      - BITCOIN_NETWORK=testnet
+    command: >
+      bitcoin-cli
+      -testnet
+      -rpcuser=testuser
+      -rpcpassword=testpass123
+      -rpcconnect=bitcoin-testnet
+    networks:
+      - bitcoin-net
+
+networks:
+  bitcoin-net:
+    driver: bridge
